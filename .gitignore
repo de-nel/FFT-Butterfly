@@ -141,7 +141,6 @@ db/fft_butterfly.ram1_mem_1c3ed.hdl_old.mif
 db/fft_butterfly.ram1_mem_1c3ed.hdl.mif
 db/fft_butterfly.ram1_memory_e411fb78.hdl_old.mif
 db/fft_butterfly.ram1_memory_e411fb78.hdl.mif
-mem.sv
 db/fft_butterfly.(3).cnf.hdb
 db/fft_butterfly.(4).cnf.cdb
 db/fft_butterfly.(4).cnf.hdb
