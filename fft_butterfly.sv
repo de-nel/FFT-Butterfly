@@ -31,7 +31,7 @@ module fft_butterfly(
         .nReset(nReset),
         .raw(ReadyIn),
         .debounced(debouncedReady)
-    )
+    );
     
     // Instantiate updated controller (store states removed)
     controller ctrl (
