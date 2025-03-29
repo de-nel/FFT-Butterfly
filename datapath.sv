@@ -34,8 +34,6 @@ module datapath (
 
     //-------------------------------------------------------------------------
     // 2) Sequential logic:
-    //    - Update registers on rising edge
-    //    - If an enable is high, we store the combinational result
     //-------------------------------------------------------------------------
     always_ff @(posedge Clock or negedge nReset) begin
         if (!nReset) begin
@@ -84,9 +82,7 @@ module datapath (
     end
 
     //-------------------------------------------------------------------------
-    // 1) Combinational logic:
-    //    - Based on which "calc" signal is asserted, set input_a/input_b
-    //    - Also generate an "enable" to tell the FF to store next cycle
+    // Combinational logic:
     //-------------------------------------------------------------------------
     always_comb begin
         // Default

@@ -32,7 +32,7 @@ module controller(
     state_t state;
 
     // State update
-    always_ff @(posedge Clock or negedge nReset) begin
+    always_ff @(posedge Clock, negedge nReset) begin
         if (!nReset)
             state <= IDLE;
         else begin

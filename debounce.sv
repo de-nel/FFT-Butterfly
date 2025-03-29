@@ -10,7 +10,7 @@ module debounce(
     logic [19:0] counter;  // 20-bit counter for up to 1,000,000 cycles
     logic        last_raw;
 
-    always_ff @(posedge clk or negedge nReset) begin
+    always_ff @(posedge clk, negedge nReset) begin
         if (!nReset) begin
             counter    <= 20'd0;
             last_raw   <= 1'b0;
