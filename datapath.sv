@@ -1,143 +1,133 @@
 module datapath (
-    output logic [7:0] result,  // For example, output the real lookup value
-    input  logic [7:0] dataIn,   // 8-bit input (address in lower 3 bits)
-    input  logic       Clock,      // Clock signal
-    input  logic       nReset,   // Active-low reset
-    input  logic       store_W, store_B,
-    input  logic       calc_ReWB , store_ReWB , 
-    input  logic       calc_ImY, store_ImY, 
-    input  logic       calc_ImZ, store_ImZ,
-    input  logic       store_A,
-    input  logic       calc_ReZ2, store_ReZ2,
-    input  logic       calc_ReZ, store_ReZ,
-    input  logic       calc_ReY, store_ReY,
-    input  logic       display_ReY, display_ImY, display_ReZ, display_ImZ,clear
+    output logic [7:0] result,
+    input  logic [7:0] dataIn,
+    input  logic       Clock, nReset,
+    
+    // No separate store/calc signals—just states in the controller
+    input  logic store_W, store_B, 
+    input  logic calc_ReWB, calc_ImY, calc_ImZ, 
+    input  logic store_A,
+    input  logic calc_ReZ2, calc_ReZ, calc_ReY,
+    input  logic display_ReY, display_ImY, display_ReZ, display_ImZ,
+    input  logic clear
 );
 
-    // Internal address register store 3 bit twiddle factor address
+    // Registers
     logic [2:0] index;
+    logic signed [7:0] Re_W, Im_W, Re_A, Re_B, Re_WB, Re_WB_2, Re_Y, Im_Y, Re_Z, Im_Z;
 
-    // Wires to capture the memory outputs
+    // Memory outputs
     wire [7:0] ReW_mem, ImW_mem;
+    mem mem_inst(.dout_re(ReW_mem), .dout_im(ImW_mem), .address(index), .clk(Clock));
 
-    //Wires to capture the multiplier outputs
+    // Multiplier and adder
+    logic signed [7:0]  input_a, input_b;
     logic signed [15:0] mult_result;
-    logic signed [7:0] input_a, input_b;
+    logic signed [7:0]  adder_result;
 
-    logic signed [7:0] adder_result;    
-    
-    //datapath registers
-    logic signed [7:0] Re_W, Im_W;
-    logic signed [7:0] Re_A, Re_B;
+    signed_mult mult_inst(.result(mult_result), .a(input_a), .b(input_b));
+    adder add_inst(.result(adder_result), .a(input_a), .b(input_b));
 
-    logic signed [7:0] Re_WB, Re_WB_2;
+    // Enables for storing results (one per operation), derived combinationally
+    logic en_ReWB, en_ImY, en_ImZ, en_ReY, en_ReZ2, en_ReZ;
 
-    logic signed [7:0] Re_Y, Im_Y;
-    logic signed [7:0] Re_Z, Im_Z;
 
-    //Instantiate the multiplier
-    signed_mult mult_inst (
-        .result(mult_result),
-        .a(input_a),
-        .b(input_b)
-        );
-    
-        //Instantiate the multiplier
-    adder add (
-        .result(adder_result),
-        .a(input_a),
-        .b(input_b)
-        );
-    
-    
-    // Instantiate the memory module
-    mem mem_inst (
-        .dout_re(ReW_mem),
-        .dout_im(ImW_mem),
-        .address(index),
-        .clk(Clock)
-    );
-
-    always_ff @(posedge Clock,negedge nReset) begin
+    //-------------------------------------------------------------------------
+    // 2) Sequential logic:
+    //    - Update registers on rising edge
+    //    - If an enable is high, we store the combinational result
+    //-------------------------------------------------------------------------
+    always_ff @(posedge Clock or negedge nReset) begin
         if (!nReset) begin
-            result <= 8'b0;
-            Re_W   <= 8'b0;
-            Im_W   <= 8'b0;
-            index  <= 3'b0;
-            input_a <= 0;
-            input_b <= 0;
-            Re_A     <= 8'b0;
-            Re_B     <= 8'b0;
-            Re_WB    <= 8'b0;
-            Re_WB_2  <= 8'b0;
-            Re_Y     <= 8'b0;
-            Im_Y     <= 8'b0;
-            Re_Z     <= 8'b0;
-            Im_Z     <= 8'b0;
+            // Asynchronous reset
+            result <= 0;
+            index  <= 0;
+            Re_W   <= 0;
+            Im_W   <= 0;
+            Re_A   <= 0;
+            Re_B   <= 0;
+            Re_WB  <= 0;
+            Re_WB_2<= 0;
+            Re_Y   <= 0;
+            Im_Y   <= 0;
+            Re_Z   <= 0;
+            Im_Z   <= 0;
         end 
         else begin
-            if(clear) result <=0;
+            if(clear) 
+                result <= 0;
 
-            else if(store_W) begin 
-                        index <= dataIn[2:0];
-                        Re_W <= ReW_mem;
-                        Im_W <= ImW_mem;
+            // These store signals directly write registers, no separate states needed
+            else if(store_W) begin
+                index <= dataIn[2:0];
+                Re_W  <= ReW_mem;
+                Im_W  <= ImW_mem;
             end
+            else if(store_B)   Re_B <= dataIn;
+            else if(store_A)   Re_A <= dataIn;
 
-            else if(store_B) Re_B <= dataIn;
+            // If the controller is in CALC_* state, it asserts calc_*, we see en_*
+            // and store the multiplier or adder output here.
+            if (en_ReWB)  Re_WB  <= mult_result[14:7];
+            if (en_ImY)   Im_Y   <= mult_result[14:7];
+            if (en_ImZ)   Im_Z   <= adder_result;
+            if (en_ReY)   Re_Y   <= adder_result;
+            if (en_ReZ2)  Re_WB_2<= adder_result;
+            if (en_ReZ)   Re_Z   <= adder_result;
 
-            else if(calc_ReWB) begin
-                    input_a <= Re_W;
-                    input_b <= Re_B;
-            end
+            // Display signals
+            if      (display_ReY) result <= Re_Y;
+            else if (display_ImY) result <= Im_Y;
+            else if (display_ReZ) result <= Re_Z;
+            else if (display_ImZ) result <= Im_Z;
+        end
+    end
 
-            else if(store_ReWB) Re_WB <= mult_result[14:7];
-            
+    //-------------------------------------------------------------------------
+    // 1) Combinational logic:
+    //    - Based on which "calc" signal is asserted, set input_a/input_b
+    //    - Also generate an "enable" to tell the FF to store next cycle
+    //-------------------------------------------------------------------------
+    always_comb begin
+        // Default
+        input_a  = '0;
+        input_b  = '0;
+        en_ReWB  = 0;
+        en_ImY   = 0;
+        en_ImZ   = 0;
+        en_ReY   = 0;
+        en_ReZ2  = 0;
+        en_ReZ   = 0;
 
-            else if(calc_ImY) begin
-                input_a <= Im_W;
-                input_b <= Re_B;
-            end
-
-            else if(store_ImY) Im_Y <= mult_result[14:7];
-
-            else if(calc_ImZ)begin
-                input_a <= ~(Im_Y);
-                input_b <= 1;
-            end
-
-            else if(store_ImZ) Im_Z <= adder_result;
-
-            else if(store_A) Re_A <= dataIn;
-
-            else if(calc_ReY) begin
-                input_a <= Re_A;
-                input_b <= Re_WB;
-            end
-
-            else if(store_ReY) Re_Y <= adder_result;
-
-            else if(calc_ReZ2) begin
-                input_a <= ~(Re_WB);
-                input_b <= 1;
-
-            end
-
-            else if(store_ReZ2) Re_WB_2 <= adder_result;
-
-            else if(calc_ReZ) begin
-                input_a <= Re_A;
-                input_b <= Re_WB_2;
-
-            end 
-            else if(store_ReZ) Re_Z <= adder_result;
-
-            else if(display_ReY) result <= Re_Y;
-            else if(display_ImY) result <= Im_Y;
-            else if(display_ReZ) result <= Re_Z;
-            else if(display_ImZ) result <= Im_Z;
-            
-
+        if (calc_ReWB) begin
+            input_a = Re_W; 
+            input_b = Re_B;
+            en_ReWB = 1;
+        end
+        if (calc_ImY) begin
+            input_a = Im_W;
+            input_b = Re_B;
+            en_ImY = 1;
+        end
+        if (calc_ImZ) begin
+            input_a = ~Im_Y;
+            input_b = 1;
+            en_ImZ = 1;
+        end
+        if (calc_ReY) begin
+            input_a = Re_A;
+            input_b = Re_WB;
+            en_ReY = 1;
+        end
+        if (calc_ReZ2) begin
+            input_a = ~Re_WB;
+            input_b = 1;
+            en_ReZ2 = 1;
+        end
+        if (calc_ReZ) begin
+            input_a = Re_A;
+            input_b = Re_WB_2;
+            en_ReZ = 1;
         end
     end
 endmodule
