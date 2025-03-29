@@ -16,15 +16,6 @@ module fft_butterfly(
     logic       calc_ReZ2, calc_ReZ, calc_ReY;
     logic       display_ReY, display_ImY, display_ReZ, display_ImZ;
     logic       clear;
-
-    // // Instantiate debouncer
-    // debounce debouncer (    
-    //     .logic_level(debouncedReady),
-    //     .pulse(debouncedPulse),
-    //     .clk(Clock),
-    //     .nReset(nReset),
-    //     .switch(ReadyIn)
-    // );
     
     debounce debouncer (
         .clk(Clock),
