@@ -2,7 +2,7 @@
 
 ## Notes
 
-- Synthesised on INTEL CYCLONE V SOC FPGA and working
+- Synthesised on INTEL CYCLONE V SOC FPGA 
 - `fft_butterfly.sv` is the top module
 - Coded a `controller.sv` and `datapath.sv` structure
 - `debounce` slide switches with 50 MHz clock
