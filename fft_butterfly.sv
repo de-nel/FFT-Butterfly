@@ -17,14 +17,21 @@ module fft_butterfly(
     logic       display_ReY, display_ImY, display_ReZ, display_ImZ;
     logic       clear;
 
-    // Instantiate debouncer
-    debounce debouncer (    
-        .logic_level(debouncedReady),
-        .pulse(debouncedPulse),
+    // // Instantiate debouncer
+    // debounce debouncer (    
+    //     .logic_level(debouncedReady),
+    //     .pulse(debouncedPulse),
+    //     .clk(Clock),
+    //     .nReset(nReset),
+    //     .switch(ReadyIn)
+    // );
+    
+    debounce debouncer (
         .clk(Clock),
         .nReset(nReset),
-        .switch(ReadyIn)
-    );
+        .raw(ReadyIn),
+        .debounced(debouncedReady)
+    )
     
     // Instantiate updated controller (store states removed)
     controller ctrl (
