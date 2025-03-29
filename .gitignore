@@ -146,3 +146,11 @@ db/fft_butterfly.(4).cnf.cdb
 db/fft_butterfly.(4).cnf.hdb
 db/fft_butterfly.ram0_mem_1c3ed.hdl_old.mif
 db/fft_butterfly.ram1_mem_1c3ed.hdl.mif
+output_files/fft_butterfly.map.smsg
+db/fft_butterfly.(5).cnf.cdb
+db/fft_butterfly.(5).cnf.hdb
+db/fft_butterfly.(6).cnf.cdb
+db/fft_butterfly.(6).cnf.hdb
+db/fft_butterfly.cbx.xml
+db/fft_butterfly.quiproj.16724.rdr.flock
+controller.sv.bak
