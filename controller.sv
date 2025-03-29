@@ -11,7 +11,7 @@ module controller(
 );
 
     // Reduced state encoding – no separate store states
-    typedef enum logic [3:0] {
+    typedef enum logic [4:0] {
         IDLE, 
         WAITW, 
         READW, 
