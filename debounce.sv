@@ -6,7 +6,7 @@ module debounce (
     input  logic       switch
 );
     // Number of bits for the counter
-    localparam int N = 20;
+    localparam int N = 21;
 
     // State encoding
     typedef enum {
@@ -16,7 +16,7 @@ module debounce (
     logic [N-1:0] q_reg,    q_next;
 
     // Synchronous state and data registers
-    always_ff @(posedge clk or negedge nReset) 
+    always_ff @(posedge clk,negedge nReset) 
         if (!nReset) 
             begin
                 state_reg <= ZERO;

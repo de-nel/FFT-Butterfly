@@ -1,51 +1,87 @@
 module fft_butterfly(
     output logic [7:0] result,
     input  logic       Clock,
-    input  logic       nReset,  // active-high reset
-    input  logic       ReadyIn, /
+    input  logic       nReset,  
+    input  logic       ReadyIn, 
     input  logic [7:0] dataIn
 );
     // Internal wires to connect the controller and datapath
-    logic       twiddle;
-    logic       compute;
-    logic       enableW_RE;
-    logic       enableW_IM;
-    logic       store_Reb;
+
     logic       debouncedReady;
     logic       debouncedPulse;
+    logic       store_W, store_B;
+    logic       calc_ReWB, store_ReWB;
+    logic       calc_ImY, store_ImY;
+    logic       calc_ImZ, store_ImZ;
+    logic       store_A;
+    logic       calc_ReZ2, store_ReZ2;
+    logic       calc_ReZ, store_ReZ;
+    logic       calc_ReY, store_ReY;
+    logic       display_ReY, display_ImY, display_ReZ, display_ImZ, clear;
 
     // Instantiate the debouncer
     debounce debouncer (    
         .logic_level(debouncedReady),
-        .pulse(debouncedPulse)
+        .pulse(debouncedPulse),
         .clk(Clock),
         .nReset(nReset),
-        .switch(ReadyIn),
-    )
+        .switch(ReadyIn)
+    );
     
     // Instantiate the controller using the debounced signal.
     controller ctrl (
-        .compute(compute),
-        .store_Reb(store_Reb),
-        .twiddle(twiddle),
-        .enableW_RE(enableW_RE),
-        .enableW_IM(enableW_IM),
+        .store_W(store_W),
+        .store_B(store_B),
+        .calc_ReWB(calc_ReWB),
+        .store_ReWB(store_ReWB),
+        .calc_ImY(calc_ImY),
+        .store_ImY(store_ImY),
+        .calc_ImZ(calc_ImZ),
+        .store_ImZ(store_ImZ),
+        .store_A(store_A),
+        .calc_ReZ2(calc_ReZ2),
+        .store_ReZ2(store_ReZ2),
+        .calc_ReZ(calc_ReZ),
+        .store_ReZ(store_ReZ),
+        .calc_ReY(calc_ReY),
+        .store_ReY(store_ReY),
+        .display_ReY(display_ReY),
+        .display_ImY(display_ImY),
+        .display_ReZ(display_ReZ),
+        .display_ImZ(display_ImZ),
+        .clear(clear),
         .Clock(Clock),
         .nReset(nReset),
-        .ReadyIn(debouncedReady),
+        .ReadyIn(debouncedReady)
         );
     
     // Instantiate the datapath
-    datapath dp (
+    datapath datapath_inst ( 
         .result(result),
         .dataIn(dataIn),
         .Clock(Clock),
-        .nReset(nReset),       // Map nReset to datapath reset
-        .twiddle(twiddle),
-        .compute(compute),
-        .enableW_RE(enableW_RE),
-        .enableW_IM(enableW_IM),
-        .store_Reb(store_Reb)
-    );
+        .nReset(nReset),
+        .store_W(store_W),
+        .store_B(store_B),
+        .calc_ReWB(calc_ReWB),
+        .store_ReWB(store_ReWB),
+        .calc_ImY(calc_ImY),
+        .store_ImY(store_ImY),
+        .calc_ImZ(calc_ImZ),
+        .store_ImZ(store_ImZ),
+        .store_A(store_A),
+        .calc_ReZ2(calc_ReZ2),
+        .store_ReZ2(store_ReZ2),
+        .calc_ReZ(calc_ReZ),
+        .store_ReZ(store_ReZ),
+        .calc_ReY(calc_ReY),
+        .store_ReY(store_ReY),
+        .display_ReY(display_ReY),
+        .display_ImY(display_ImY),
+        .display_ReZ(display_ReZ),
+        .display_ImZ(display_ImZ),
+        .clear(clear)
+        );
+
     
 endmodule

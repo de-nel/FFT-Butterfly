@@ -1,102 +1,129 @@
 module controller(
-    output logic compute,       // Control signal to perform computation in datapath
-    output logic store_Reb,
-    output logic twiddle,       // Control signal to perform computation in datapath
-    output logic enableW_RE,    // Signal for real-part enable
-    output logic enableW_IM,    // Signal for imaginary-part enable
+    output logic store_W, store_B, 
+    output logic calc_ReWB, store_ReWB, 
+    output logic calc_ImY, store_ImY,
+    output logic calc_ImZ, store_ImZ,
+    output logic store_A,
+    output logic calc_ReZ2, store_ReZ2,
+    output logic calc_ReZ, store_ReZ,
+    output logic calc_ReY, store_ReY,
+    output logic display_ReY, display_ImY, display_ReZ, display_ImZ, clear,
     input  logic Clock,
-    input  logic nReset
+    input  logic nReset,
     input  logic ReadyIn  // 10 slide switches from the FPGA board
 );
 
-    //-------------------------------------------------------------------------
-    // Use one of the slide switches as the ReadyIn signal.
-    // For example, we use slide_switch[0]. The switches are level-sensitive,
-    // with UP (high) and DOWN (low). You could use a different mapping if needed.
-    //-------------------------------------------------------------------------
-    logic ReadyIn;
-
-    // always_ff @(posedge Clock or negedge nReset) begin
-    //     if (!nReset)
-    //         ReadyIn <= 1'b0;
-    //     else
-    //         ReadyIn <= slide_switch;
-    // end
 
     //-------------------------------------------------------------------------
     // State declaration
     //-------------------------------------------------------------------------
-    typedef enum logic [3:0] {
-        IDLE,
-        WAIT0_W,
-        WAIT1_W,
-        WAIT0_D,
-        WAIT1_D,
-        WAIT0_I,
-        WAIT1_I,
-        READ_W,
-        READ_B,
-        DISP_W_RE,
-        DISP_W_IM
-    } state_t;
+    typedef enum logic [4:0] {IDLE, WAITW, READW, 
+                            WAITB, READB, 
+                            CALC_REWB, STORE_REWB,
+                            CALC_IMY, STORE_IMY,
+                            CALC_IMZ, STORE_IMZ,
+                            WAITA, READA,
+                            CALC_REZ2, STORE_REZ2,
+                            CALC_REZ, STORE_REZ,
+                            CALC_REY, STORE_REY, 
+                            DISPLAY_REY, DISPLAY_IMY, DISPLAY_REZ, DISPLAY_IMZ } state_t;
     state_t state;
 
     //-------------------------------------------------------------------------
     // State and next state logic
     //-------------------------------------------------------------------------
-    always_ff @(posedge Clock or negedge nReset) begin
+    always_ff @(posedge Clock,negedge nReset) begin
         if (!nReset)
             state <= IDLE;
         else begin
             case (state)
-                // a.Wait for SW8 =0
-                IDLE:      state <= WAIT0_W;
-                WAIT0_W:   if (ReadyIn == 0) state <= WAIT1_W;
+        
+                IDLE:     if (ReadyIn == 0) state <= WAITW; 
+                WAITW:    if (ReadyIn == 1) state <= READW;
 
-                // b.Wait for SW8 =1
-                WAIT1_W:   if (ReadyIn == 1) state <= READ_W;
+                READW:    if (ReadyIn == 0) state <= WAITB;
+                WAITB:    if (ReadyIn == 1) state <= READB;
 
-                // c.Read twiddle factor
-                READ_W:    state <= WAIT0_D;
+                READB:     state <= CALC_REWB;
+                CALC_REWB: state <= STORE_REWB;
+                STORE_REWB: state <= CALC_IMY;
+
+                CALC_IMY: state <= STORE_IMY;
+                STORE_IMY: state <= CALC_IMZ;
+
+                CALC_IMZ: state <= STORE_IMZ;
+                STORE_IMZ: if (ReadyIn == 0) state <= WAITA;
                 
-                // d.Wait for SW8 =0
-                WAIT0_D:   if (ReadyIn == 0) state <= WAIT1_D;
+                WAITA:	if (ReadyIn == 1)   state <= READA;
+                READA:   state <= CALC_REZ2;
 
-                // e.Wait for SW8 =1
-                WAIT1_D:   if (ReadyIn == 1) state <= READ_B;
+                CALC_REZ2: state <= STORE_REZ2;
+                STORE_REZ2: state <= CALC_REZ;
+                
+                CALC_REZ: state <= STORE_REZ;
+                STORE_REZ: state <= CALC_REY;
+                CALC_REY: state <= STORE_REY;
+                STORE_REY: state <= DISPLAY_REY;
 
-                // f.Read Re b
-                READ_B:    state <= WAIT0_I; 
+                DISPLAY_REY:if (ReadyIn == 0) state <= DISPLAY_IMY;
+                DISPLAY_IMY:if (ReadyIn == 1) state <= DISPLAY_REZ;
+                DISPLAY_REZ:if (ReadyIn == 0) state <= DISPLAY_IMZ;
+                DISPLAY_IMZ:if (ReadyIn == 1) state <= IDLE;
 
-                // g.Wait for SW8 =0
-                WAIT0_I:   if (ReadyIn == 1) state <= WAIT1_I;
-
-                // h.Wait for SW8 =1
-                WAIT1_I:   if (ReadyIn == 1) state <= DISP_W_IM;
-                DISP_W_IM: if (ReadyIn == 0) state <= IDLE;
                 default:   state <= IDLE;
             endcase
         end
     end
 
     //-------------------------------------------------------------------------
-    // Output logic
+    //  Signals
     //-------------------------------------------------------------------------
     always_comb begin
         // Default values
-        enableW_RE = 0;
-        enableW_IM = 0;
-        compute    = 0;
-        twiddle    = 0;
-        store_Reb  = 0;
+		clear = 0;
+        store_W = 0;
+        store_B = 0;
+        calc_ReWB = 0;
+        store_ReWB = 0;
+        calc_ImY = 0;
+        store_ImY = 0;
+        calc_ImZ = 0;
+        store_ImZ = 0;
+        store_A = 0;
+        calc_ReZ2 =0;
+        store_ReZ2 = 0;
+        calc_ReZ = 0;
+        store_ReZ = 0;
+        calc_ReY = 0;
+        store_ReY = 0;
+        display_ReY = 0;
+        display_ImY = 0;
+        display_ReZ = 0;
+        display_ImZ = 0;
+
+        // State-dependent output logic
         case (state)
-            WAIT0_W:    twiddle   = 1;
-            READ_W:     compute   = 1;
-            READ_B:     store_Reb  = 1;
-            DISP_W_RE:  enableW_RE = 1;
-            DISP_W_IM:  enableW_IM = 1;
-            default:    ; // defaults already applied
+            IDLE:   clear = 1;
+            READW:    store_W = 1;
+            READB:    store_B = 1;
+            CALC_REWB:calc_ReWB = 1;
+            STORE_REWB:store_ReWB = 1;
+            CALC_IMY: calc_ImY = 1;
+            STORE_IMY: store_ImY = 1;
+            CALC_IMZ: calc_ImZ = 1;
+            STORE_IMZ: store_ImZ = 1;
+            READA:    store_A = 1;
+            CALC_REZ2: calc_ReZ2 =1;
+            STORE_REZ2: store_ReZ2 = 1;
+            CALC_REZ: calc_ReZ = 1;
+            STORE_REZ: store_ReZ = 1;
+            CALC_REY: calc_ReY = 1;
+            STORE_REY: store_ReY = 1;
+            DISPLAY_REY:display_ReY = 1;
+            DISPLAY_IMY:display_ImY = 1;
+            DISPLAY_REZ:display_ReZ = 1;
+            DISPLAY_IMZ:display_ImZ = 1;
+            default:    ; 
         endcase
     end
-
 endmodule
