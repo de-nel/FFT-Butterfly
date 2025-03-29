@@ -1,12 +1,10 @@
-﻿# FFT_BUTTERFLY
-# for INTEL CYCLONE V SOC FPGA
-# notes:
-# #fft_butterfly is the top module
-# controller and datapath modules 
-# Debounce slide switches with 50 Mhz clock
-#Only uses 1 Adder and 1 multiplier (aside from the counter in the debouncer)
-# twiddle factors stored in memory, but too small for Quartus to use block memory therefore stored in hardware as comb logic
- 
- 
- 
- 
+# FFT_BUTTERFLY
+
+## Notes
+
+- Synthesised on INTEL CYCLONE V SOC FPGA and working
+- `fft_butterfly` is the top module
+- Coded using a controller and datapath structure
+- Debounce slide switches with 50 MHz clock
+- Only uses 1 adder and 1 multiplier (aside from the counter in the debouncer)
+- Twiddle factors stored in memory; due to size limitations for Quartus block memory, they are implemented as combinational logic
