@@ -7,9 +7,9 @@ module fft_butterfly(
 );
 
     // Debouncer signals
-    logic debouncedReady, debouncedPulse;
+    logic debouncedReady;
 
-    // Controller/Datapath control signals (store signals removed for calc-only operations)
+    // Controller/Datapath control signals 
     logic       store_W, store_B;
     logic       calc_ReWB, calc_ImY, calc_ImZ;
     logic       store_A;
@@ -24,7 +24,7 @@ module fft_butterfly(
         .debounced(debouncedReady)
     );
     
-    // Instantiate updated controller (store states removed)
+    // Instantiate updated controller
     controller ctrl (
         .store_W(store_W),
         .store_B(store_B),

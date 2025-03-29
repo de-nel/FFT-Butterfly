@@ -3,7 +3,7 @@ module datapath (
     input  logic [7:0] dataIn,
     input  logic       Clock, nReset,
     
-    // No separate store/calc signals—just states in the controller
+    // signals from controller
     input  logic store_W, store_B, 
     input  logic calc_ReWB, calc_ImY, calc_ImZ, 
     input  logic store_A,
@@ -28,7 +28,7 @@ module datapath (
     signed_mult mult_inst(.result(mult_result), .a(input_a), .b(input_b));
     adder add_inst(.result(adder_result), .a(input_a), .b(input_b));
 
-    // Enables for storing results (one per operation), derived combinationally
+    // Enables for storing results 
     logic en_ReWB, en_ImY, en_ImZ, en_ReY, en_ReZ2, en_ReZ;
 
 
@@ -37,7 +37,6 @@ module datapath (
     //-------------------------------------------------------------------------
     always_ff @(posedge Clock or negedge nReset) begin
         if (!nReset) begin
-            // Asynchronous reset
             result <= 0;
             index  <= 0;
             Re_W   <= 0;
@@ -55,7 +54,6 @@ module datapath (
             if(clear) 
                 result <= 0;
 
-            // These store signals directly write registers, no separate states needed
             else if(store_W) begin
                 index <= dataIn[2:0];
                 Re_W  <= ReW_mem;
@@ -64,8 +62,6 @@ module datapath (
             else if(store_B)   Re_B <= dataIn;
             else if(store_A)   Re_A <= dataIn;
 
-            // If the controller is in CALC_* state, it asserts calc_*, we see en_*
-            // and store the multiplier or adder output here.
             if (en_ReWB)  Re_WB  <= mult_result[14:7];
             if (en_ImY)   Im_Y   <= mult_result[14:7];
             if (en_ImZ)   Im_Z   <= adder_result;

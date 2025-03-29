@@ -13,17 +13,17 @@ module controller(
     input  logic ReadyIn  // Debounced switch signal
 );
 
-    // State declaration (store states removed)
+    // State declaration 
     typedef enum logic [4:0] {
         IDLE, WAITW, READW, WAITB, READB, 
-        CALC_REWB,  // Perform ReWB calc (and implicitly store result next cycle)
-        CALC_IMY,   // Calc ImY
-        CALC_IMZ,   // Calc ImZ
+        CALC_REWB, 
+        CALC_IMY,  
+        CALC_IMZ,    
         WAITA, 
-        READA,      // Read A
-        CALC_REZ2,  // Calc ReZ2
-        CALC_REZ,   // Calc ReZ
-        CALC_REY,   // Calc ReY
+        READA,      
+        CALC_REZ2,  
+        CALC_REZ,   
+        CALC_REY,   
         DISPLAY_REY,
         DISPLAY_IMY,
         DISPLAY_REZ,
@@ -59,9 +59,9 @@ module controller(
         end
     end
 
-    // Output signal generation
+    // Output signal 
     always_comb begin
-        // Default assignments
+        // Default 
         clear       = 0;
         store_W     = 0;
         store_B     = 0;
