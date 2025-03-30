@@ -28,10 +28,6 @@ module datapath (
     signed_mult mult_inst(.result(mult_result), .a(input_a), .b(input_b));
     adder add_inst(.result(adder_result), .a(input_a), .b(input_b));
 
-    // Enables for storing results 
-    logic en_ReWB, en_ImY, en_ImZ, en_ReY, en_ReZ2, en_ReZ;
-
-
     //-------------------------------------------------------------------------
     // 2) Sequential logic:
     //-------------------------------------------------------------------------
@@ -62,12 +58,12 @@ module datapath (
             else if(store_B)   Re_B <= dataIn;
             else if(store_A)   Re_A <= dataIn;
 
-            if (en_ReWB)  Re_WB  <= mult_result[14:7];
-            if (en_ImY)   Im_Y   <= mult_result[14:7];
-            if (en_ImZ)   Im_Z   <= adder_result;
-            if (en_ReY)   Re_Y   <= adder_result;
-            if (en_ReZ2)  Re_WB_2<= adder_result;
-            if (en_ReZ)   Re_Z   <= adder_result;
+            if (calc_ReWB)  Re_WB  <= mult_result[14:7];
+            if (calc_ImY)   Im_Y   <= mult_result[14:7];
+            if (calc_ImZ)   Im_Z   <= adder_result;
+            if (calc_ReY)   Re_Y   <= adder_result;
+            if (calc_ReZ2)  Re_WB_2<= adder_result;
+            if (calc_ReZ)   Re_Z   <= adder_result;
 
             // Display signals
             if      (display_ReY) result <= Re_Y;
@@ -84,42 +80,30 @@ module datapath (
         // Default
         input_a  = '0;
         input_b  = '0;
-        en_ReWB  = 0;
-        en_ImY   = 0;
-        en_ImZ   = 0;
-        en_ReY   = 0;
-        en_ReZ2  = 0;
-        en_ReZ   = 0;
 
         if (calc_ReWB) begin
             input_a = Re_W; 
             input_b = Re_B;
-            en_ReWB = 1;
         end
         if (calc_ImY) begin
             input_a = Im_W;
             input_b = Re_B;
-            en_ImY = 1;
         end
         if (calc_ImZ) begin
             input_a = ~Im_Y;
             input_b = 1;
-            en_ImZ = 1;
         end
         if (calc_ReY) begin
             input_a = Re_A;
             input_b = Re_WB;
-            en_ReY = 1;
         end
         if (calc_ReZ2) begin
             input_a = ~Re_WB;
             input_b = 1;
-            en_ReZ2 = 1;
         end
         if (calc_ReZ) begin
             input_a = Re_A;
             input_b = Re_WB_2;
-            en_ReZ = 1;
         end
     end
 endmodule
